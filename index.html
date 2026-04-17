@@ -2,16 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-
-  <!-- CLAVE para móviles -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Juego de Adivinanzas</title>
+  <title>Ruta Napoleónica</title>
 
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      font-family: "Georgia", serif;
+      background: url("https://images.unsplash.com/photo-1578926288207-a90a5366759d") no-repeat center center fixed;
+      background-size: cover;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -20,43 +18,53 @@
     }
 
     .contenedor {
-      background: white;
-      padding: 20px;
+      background: rgba(255, 248, 220, 0.95);
+      padding: 25px;
       border-radius: 15px;
       text-align: center;
       width: 90%;
-      max-width: 350px;
-      box-shadow: 0px 5px 20px rgba(0,0,0,0.2);
+      max-width: 420px;
+      box-shadow: 0px 10px 30px rgba(0,0,0,0.6);
+      border: 3px solid #c9a44c;
     }
 
     h1 {
       font-size: 22px;
-      margin-bottom: 15px;
+      color: #3b2f2f;
+      margin-bottom: 10px;
+    }
+
+    #progreso {
+      font-size: 14px;
+      color: #6b5b4b;
+      margin-bottom: 10px;
     }
 
     input {
       padding: 12px;
       width: 100%;
       font-size: 16px;
-      margin-bottom: 10px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 2px solid #c9a44c;
+      background: #fffdf5;
     }
 
     button {
+      margin-top: 10px;
       padding: 12px;
       width: 100%;
       font-size: 16px;
       border: none;
-      border-radius: 10px;
-      background: #4facfe;
+      border-radius: 8px;
+      background: #8b6f3d;
       color: white;
       cursor: pointer;
       font-weight: bold;
     }
 
-    button:active {
-      background: #00c6ff;
+    button:hover {
+      background: #a3834b;
     }
 
     #resultado {
@@ -65,66 +73,103 @@
       font-size: 16px;
     }
 
-    #intentos {
-      margin-top: 8px;
-      color: gray;
-      font-size: 14px;
+    #pista {
+      margin-top: 10px;
+      color: #5a4634;
+      font-style: italic;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="contenedor">
-    <h1>🎮 Adivina la palabra</h1>
+<div class="contenedor">
+  <h1 id="titulo">🎖️ Ruta Napoleónica</h1>
+  <div id="progreso">Pregunta 1 de 23</div>
 
-    <input type="text" id="entrada" placeholder="Escribe aquí...">
+  <input type="text" id="entrada" placeholder="Escribe tu respuesta">
 
-    <button onclick="verificar()">Intentar</button>
+  <button onclick="verificar()">Responder</button>
 
-    <p id="resultado"></p>
-    <p id="intentos"></p>
-  </div>
+  <p id="resultado"></p>
+  <p id="pista"></p>
+</div>
 
-  <script>
-    const palabras = {
-      "java": "Lenguaje de programación",
-      "python": "Lenguaje muy fácil de aprender",
-      "gato": "Animal doméstico",
-      "colombia": "País de Latinoamérica"
-    };
+<script>
 
-    let intentos = 0;
+const juego = [
+  {respuesta: "napoleon", pista: "Cuadro del tercer piso"},
+  {respuesta: "josefina", pista: "Balcón de la biblioteca"},
+  {respuesta: "corte imperio", pista: "Fileteadora"},
+  {respuesta: "muselina", pista: "Salón de textiles"},
+  {respuesta: "manguito", pista: "Donde antes se vendía comida"},
+  {respuesta: "estola de piel de oso", pista: "máquina expendedora sexto piso"},
+  {respuesta: "epidemia de neumonia", pista: "Baño en el primer piso"},
+  {respuesta: "si", pista: "Salón 6600"},
+  {respuesta: "para tener hijos", pista: "Escaleras que llevan al salón de la mitad de confección"},
+  {respuesta: "bandas cruzadas", pista: "Auditorio"},
+  {respuesta: "tipo baleta", pista: "debajo de los banquitos del sexto piso"},
+  {respuesta: "abanico", pista: "Sala de espera entrada universidad debajo de la mesa"},
+  {respuesta: "manga corta", pista: "Una de las mesitas de luz"},
+  {respuesta: "mas bajos", pista: "Lockers del tercer piso"},
+  {respuesta: "mas sencillez", pista: "Enfermería"},
+  {respuesta: "plumas", pista: "Televisores de los pasillos"},
+  {respuesta: "1820", pista: "Escaleras al sexto piso"},
+  {respuesta: "alambre", pista: "Cerca al microondas"},
+  {respuesta: "cenidores", pista: "Mesas del sexto piso"},
+  {respuesta: "verde rosa azul vino tinto rojo", pista: "Gabardina azul en salón de confección"},
+  {respuesta: "rojo", pista: "Debajo del teclado en biblioteca"},
+  {respuesta: "reloj de cadena", pista: "Banquito frente al salón de confección"},
+  {respuesta: "witchoura", pista: "🎁 Vuelve por tu premio"}
+];
 
-    function verificar() {
-      const input = document.getElementById("entrada").value.toLowerCase().trim();
-      const resultado = document.getElementById("resultado");
-      const intentosTexto = document.getElementById("intentos");
+let nivel = 0;
 
-      if (input === "") return;
+function normalizar(texto) {
+  return texto.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
 
-      intentos++;
+function verificar() {
+  const input = normalizar(document.getElementById("entrada").value);
+  const correcto = normalizar(juego[nivel].respuesta);
 
-      if (palabras[input]) {
-        resultado.textContent = "✅ Pista: " + palabras[input];
-        resultado.style.color = "green";
-      } else {
-        resultado.textContent = "❌ Incorrecto";
-        resultado.style.color = "red";
-      }
+  const resultado = document.getElementById("resultado");
+  const pista = document.getElementById("pista");
+  const progreso = document.getElementById("progreso");
 
-      intentosTexto.textContent = "Intentos: " + intentos;
+  if (input === correcto) {
+    nivel++;
 
-      document.getElementById("entrada").value = "";
+    if (nivel === juego.length) {
+      document.getElementById("titulo").textContent = "🏆 ¡Misión completada!";
+      resultado.textContent = "Has terminado la Ruta Napoleónica";
+      pista.textContent = "";
+      progreso.textContent = "";
+      return;
     }
 
-    // ENTER para enviar (clave en celular)
-    document.getElementById("entrada").addEventListener("keypress", function(e) {
-      if (e.key === "Enter") {
-        verificar();
-      }
-    });
-  </script>
+    resultado.textContent = "✅ Correcto";
+    resultado.style.color = "green";
+
+    pista.textContent = "📍 " + juego[nivel].pista;
+    progreso.textContent = "Pregunta " + (nivel + 1) + " de " + juego.length;
+
+  } else {
+    resultado.textContent = "❌ Incorrecto";
+    resultado.style.color = "red";
+  }
+
+  document.getElementById("entrada").value = "";
+}
+
+// Enter
+document.getElementById("entrada").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") verificar();
+});
+
+</script>
 
 </body>
 </html>
